@@ -1,40 +1,19 @@
 import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import {
+  PrimaryButton,
+  OutlineButton,
+  FullWidthButton,
+} from "@/components/Button";
 
 export default function Home() {
   return (
     <main className="min-h-[100svh] bg-gradient-to-b from-white to-slate-50 text-slate-900 dark:from-slate-950 dark:to-slate-900 dark:text-slate-100">
-      {/* Header */}
-      <header className="sticky top-0 z-30 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/80 dark:bg-slate-900/70 border-b border-slate-200/60 dark:border-slate-800">
-        <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-block h-8 w-8 rounded-2xl bg-violet-600/90 shadow-md" />
-            <span>FinaCheck</span>
-          </Link>
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            <Link href="/calc" className="hover:opacity-80">
-              Calculateur
-            </Link>
-            <Link href="#comment-ca-marche" className="hover:opacity-80">
-              Comment ça marche
-            </Link>
-            <Link href="#faq" className="hover:opacity-80">
-              FAQ
-            </Link>
-            <Link href="/pricing" className="hover:opacity-80">
-              Soutenir
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/calc"
-              className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-medium shadow-sm ring-1 ring-slate-300/60 dark:ring-slate-700 hover:shadow transition"
-            >
-              Lancer le calcul
-            </Link>
-          </div>
-        </div>
-      </header>
-
+      <Navbar
+        displayShorts={true}
+        displayCalcButton={true}
+        displayTipButton={true}
+      />
       {/* Hero */}
       <section className="relative">
         <div className="mx-auto max-w-6xl px-4 py-16 lg:py-24 grid gap-8 lg:grid-cols-2 items-center">
@@ -49,18 +28,10 @@ export default function Home() {
               obtiens immédiatement ton statut indicatif.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
-              <a
-                href="/calc"
-                className="inline-flex items-center rounded-2xl bg-violet-600 px-5 py-3 text-white font-semibold shadow hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500"
-              >
-                Commencer maintenant
-              </a>
-              <a
-                href="#comment-ca-marche"
-                className="inline-flex items-center rounded-2xl px-5 py-3 font-medium ring-1 ring-slate-300/60 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
+              <PrimaryButton href="/calc">Commencer maintenant</PrimaryButton>
+              <OutlineButton href="#comment-ca-marche">
                 Voir comment ça marche
-              </a>
+              </OutlineButton>
             </div>
             <div className="mt-5 text-xs text-slate-500">
               * Résultat indicatif – renseigne-toi toujours auprès de ton
@@ -103,12 +74,7 @@ export default function Home() {
                   <p className="text-xs text-slate-500">Ratio estimé 0,75</p>
                 </div>
               </div>
-              <a
-                href="/calc"
-                className="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-violet-600 py-2.5 text-white font-semibold hover:brightness-110"
-              >
-                Faire mon calcul →
-              </a>
+              <FullWidthButton href="/calc">Faire mon calcul →</FullWidthButton>
             </div>
           </div>
         </div>
@@ -131,7 +97,7 @@ export default function Home() {
               },
               {
                 title: "2. On calcule côté serveur",
-                desc: "L’algorithme tourne sur notre API. Tes données ne sont pas stockées pour le MVP.",
+                desc: "L’algorithme tourne sur notre API. Tes données ne sont pas stockées pour le MVP (Minimum Viable Product - version actuelle).",
               },
               {
                 title: "3. Tu obtiens ton statut",
@@ -166,30 +132,21 @@ export default function Home() {
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                Pas de stockage des saisies (MVP).{" "}
+                Pas de stockage des saisies (MVP).
               </li>
               <li className="flex gap-3">
                 <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                Open source prochainement (transparence de l’algorithme).
-              </li>
-              <li className="flex gap-3">
-                <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                PWA installable, fonctionne hors-ligne (shell){" "}
+                Transparence : règles publiques citées ; moteur de calcul privé
+                (serveur).
               </li>
             </ul>
             <div className="mt-6 flex gap-3">
-              <a
-                href="/privacy"
-                className="inline-flex items-center rounded-xl px-4 py-2 ring-1 ring-slate-300/60 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
+              <OutlineButton href="/privacy" className="px-4 py-2">
                 Politique de confidentialité
-              </a>
-              <a
-                href="/mentions-legales"
-                className="inline-flex items-center rounded-xl px-4 py-2 ring-1 ring-slate-300/60 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-              >
+              </OutlineButton>
+              <OutlineButton href="/mentions-legales" className="px-4 py-2">
                 Mentions légales
-              </a>
+              </OutlineButton>
             </div>
           </div>
           <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-violet-600/10 to-fuchsia-500/10 p-6">
@@ -200,22 +157,10 @@ export default function Home() {
                 et son amélioration.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
-                <a
-                  href="/pricing"
-                  className="inline-flex items-center rounded-xl bg-violet-600 px-4 py-2 text-white font-semibold hover:brightness-110"
-                >
+                <PrimaryButton href="/tip" className="px-4 py-2">
                   Soutenir maintenant
-                </a>
-                <a
-                  href="/pricing"
-                  className="inline-flex items-center rounded-xl px-4 py-2 ring-1 ring-slate-300/60 dark:ring-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                >
-                  En savoir plus
-                </a>
+                </PrimaryButton>
               </div>
-              <p className="mt-3 text-xs text-slate-500">
-                Alternatives: PayPal / Ko‑fi / BuyMeACoffee
-              </p>
             </div>
           </div>
         </div>
@@ -244,7 +189,7 @@ export default function Home() {
               },
               {
                 q: "Puis-je installer l’application ?",
-                a: "Oui, ajoute-la à ton écran d’accueil. Elle fonctionne comme une PWA.",
+                a: "Oui, ajoute‑la à ton écran d’accueil. Elle fonctionne comme une PWA.",
               },
             ].map((item, i) => (
               <details
@@ -267,17 +212,14 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t border-slate-200 dark:border-slate-800">
         <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-slate-500 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} CampusCheck — getkaeli.com</p>
+          <p>© {new Date().getFullYear()} FinaCheck — getkaeli.com</p>
           <div className="flex items-center gap-5">
-            <a href="/privacy" className="hover:opacity-80">
+            <Link href="/privacy" className="hover:opacity-80">
               Confidentialité
-            </a>
-            <a href="/cookies" className="hover:opacity-80">
-              Cookies
-            </a>
-            <a href="/mentions-legales" className="hover:opacity-80">
+            </Link>
+            <Link href="/mentions-legales" className="hover:opacity-80">
               Mentions légales
-            </a>
+            </Link>
           </div>
         </div>
       </footer>
