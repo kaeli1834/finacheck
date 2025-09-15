@@ -1,14 +1,17 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
-import type { SubmitHandler } from "react-hook-form";
+
 import Navbar from "@/components/Navbar";
+import { StepCredits, StepEchecs, StepAnnee } from "@/components/CalcSteps";
 
 // Schéma de validation
 const Schema = z.object({
+  nationalite: z.enum(["ue", "hors_ue"]),
+  assimilé: z.enum(["oui", "non"]).optional(),
   creditsAcquis: z.coerce.number().int().min(0).max(300),
   creditsEchecs: z.coerce.number().int().min(0).max(300),
   anneeInscription: z.coerce.number().int().min(2000).max(2100),
@@ -22,19 +25,31 @@ type CalcResult = {
 };
 
 export default function CalcPage() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(Schema) });
-
+  const methods = useForm<z.input<typeof Schema>>({
+    resolver: zodResolver(Schema),
+  });
+  const [step, setStep] = useState(0);
   const [result, setResult] = useState<CalcResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
+  const stepFields: Array<Array<keyof FormData>> = [
+    // 1. Nationalité
+    ["nationalite"],
+    ["creditsAcquis"],
+    ["creditsEchecs"],
+    ["anneeInscription"],
+  ];
+
+  const handleNext = async () => {
+    const valid = await methods.trigger(stepFields[step]);
+    if (valid) setStep((s) => s + 1);
+  };
+
+  const handleBack = () => setStep((s) => Math.max(0, s - 1));
+
+  const onSubmit = async (data: FormData) => {
     setResult(null);
     setError(null);
-
     try {
       const res = await fetch("/api/calc", {
         method: "POST",
@@ -60,63 +75,52 @@ export default function CalcPage() {
         displayTipButton={true}
       />
       <main className="mx-auto max-w-md p-6">
-        <h1 className="text-2xl font-bold mb-4">Calcul de finançabilité</h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium">Crédits acquis</label>
-            <input
-              type="number"
-              {...register("creditsAcquis")}
-              className="mt-1 w-full border rounded p-2"
-            />
-            {errors.creditsAcquis && (
-              <p className="text-red-600 text-sm">
-                {errors.creditsAcquis.message}
-              </p>
+        <h1 className="text-3xl font-extrabold mb-4 text-white drop-shadow-sm">
+          Vérifie ta <span className="text-violet-600">finançabilité</span>
+        </h1>
+        <FormProvider {...methods}>
+          <form
+            onSubmit={methods.handleSubmit(
+              onSubmit as (data: unknown) => Promise<void>
             )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">
-              Crédits en échec
-            </label>
-            <input
-              type="number"
-              {...register("creditsEchecs")}
-              className="mt-1 w-full border rounded p-2"
-            />
-            {errors.creditsEchecs && (
-              <p className="text-red-600 text-sm">
-                {errors.creditsEchecs.message}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium">
-              Année d’inscription
-            </label>
-            <input
-              type="number"
-              {...register("anneeInscription")}
-              className="mt-1 w-full border rounded p-2"
-            />
-            {errors.anneeInscription && (
-              <p className="text-red-600 text-sm">
-                {errors.anneeInscription.message}
-              </p>
-            )}
-          </div>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-violet-600 text-white rounded p-2 font-semibold hover:brightness-110"
+            className="space-y-4 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-xl p-6"
           >
-            {isSubmitting ? "Calcul en cours..." : "Calculer"}
-          </button>
-        </form>
-
+            {step === 0 && <StepCredits />}
+            {step === 1 && <StepEchecs />}
+            {step === 2 && <StepAnnee />}
+            <div className="flex gap-2 mt-6">
+              {step > 0 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex-1 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded p-2 font-semibold hover:brightness-105"
+                >
+                  Précédent
+                </button>
+              )}
+              {step < 2 && (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  className="flex-1 bg-violet-600 text-white rounded p-2 font-semibold hover:brightness-110"
+                >
+                  Suivant
+                </button>
+              )}
+              {step === 2 && (
+                <button
+                  type="submit"
+                  disabled={methods.formState.isSubmitting}
+                  className="flex-1 bg-violet-600 text-white rounded p-2 font-semibold hover:brightness-110"
+                >
+                  {methods.formState.isSubmitting
+                    ? "Calcul en cours..."
+                    : "Calculer"}
+                </button>
+              )}
+            </div>
+          </form>
+        </FormProvider>
         {/* Résultats */}
         {result && (
           <div className="mt-6 p-4 rounded-xl border bg-slate-50 dark:bg-slate-800">
@@ -129,7 +133,6 @@ export default function CalcPage() {
             )}
           </div>
         )}
-
         {error && (
           <div className="mt-6 p-4 rounded-xl border bg-red-50 text-red-700">
             {error}
