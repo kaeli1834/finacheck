@@ -42,6 +42,13 @@ export type AutreTypeOption = {
   description: string;
 };
 
+export type ConcoursOption = {
+  value: "oui" | "non";
+  isPassed?: boolean;
+  label: string;
+  icon: string;
+};
+
 export type ContinuationOption = {
   value: "bloc1" | "bloc2-3";
   label: string;

@@ -49,7 +49,7 @@ export default function AnneeAutre({ index }: AnneeAutreProps) {
                   helpText="Indiquez si vous avez réussi le concours"
                 >
                   <RadioButtonGroup
-                    name={`parcoursAcademique.${index}.continuationType`}
+                    name={`parcoursAcademique.${index}.concoursOption`}
                     options={[
                       { value: "réussi", label: "Concours réussi", icon: "" },
                       { value: "raté", label: "Concours raté", icon: "" },

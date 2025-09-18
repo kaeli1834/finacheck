@@ -3,15 +3,14 @@ import { useFormContext } from "react-hook-form";
 import HelpTooltip from "./HelpTooltip";
 import RadioButtonGroup from "./form/RadioButtonGroup";
 import FieldGroup from "./form/FieldGroup";
-import AnneeAcademique from "./parcours/AnneeAcademique";
-import AnneeAutre from "./parcours/AnneeAutre";
+import AnneeCompactCard from "./parcours/AnneeCompactCard";
+import ProgressSummary from "./parcours/ProgressSummary";
 
 import { useParcours } from "@/hooks/useParcours";
-import { useFieldWatch, useParcoursFieldWatch } from "@/hooks/useFieldWatch";
+import { useFieldWatch } from "@/hooks/useFieldWatch";
 import {
   nationaliteOptions,
   assimileOptions,
-  typeAnneeOptions,
 } from "@/data/formOptions";
 
 // 1. Check nationalité : UE ou HORS UE
@@ -62,50 +61,17 @@ export function StepNationalite() {
   );
 }
 
-// Composant pour une année individuelle
+// Composant pour une année individuelle (maintenant compact)
 function AnneeCard({ field, index }: { field: any; index: number }) {
   const { handleRemove, canRemove } = useParcours();
-  const { typeAnnee } = useParcoursFieldWatch(index);
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700">
-      <div className="flex items-center justify-between mb-4">
-        <h4 className="font-medium text-slate-900 dark:text-slate-100">
-          Année {field.annee}
-        </h4>
-        {canRemove(index) && (
-          <button
-            type="button"
-            onClick={() => handleRemove(index)}
-            className="text-red-500 hover:text-red-700 text-sm p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
-            title="Supprimer cette année"
-          >
-            🗑️
-          </button>
-        )}
-      </div>
-
-      {/* Sélection du type d'année */}
-      <FieldGroup
-        label="Type d'année"
-        helpText="Indiquez si c'était une année académique ou autre chose"
-        className="mb-4"
-      >
-        <RadioButtonGroup
-          name={`parcoursAcademique.${index}.typeAnnee`}
-          options={typeAnneeOptions}
-          layout="grid"
-          gridCols={2}
-        />
-      </FieldGroup>
-
-      {/* Contenu conditionnel selon le type d'année */}
-      {typeAnnee === "academique" ? (
-        <AnneeAcademique index={index} fieldId={field.id} />
-      ) : (
-        <AnneeAutre index={index} />
-      )}
-    </div>
+    <AnneeCompactCard
+      field={field}
+      index={index}
+      canRemove={canRemove(index)}
+      onRemove={() => handleRemove(index)}
+    />
   );
 }
 
@@ -160,6 +126,9 @@ export function StepAca() {
           Remplissez chaque année pour calculer votre finançabilité
         </p>
       </div>
+
+      {/* Progress Summary */}
+      <ProgressSummary />
 
       <div className="space-y-4">
         {isEmpty ? (
