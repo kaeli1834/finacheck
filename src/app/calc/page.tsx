@@ -6,7 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 
 import Navbar from "@/components/Navbar";
-import { StepCredits, StepEchecs, StepAnnee } from "@/components/CalcSteps";
+import { StepNationalite, StepAca } from "@/components/CalcSteps";
 
 // Schéma de validation
 const Schema = z.object({
@@ -74,7 +74,7 @@ export default function CalcPage() {
         displayCalcButton={false}
         displayTipButton={true}
       />
-      <main className="mx-auto max-w-md p-6">
+      <main className="mx-auto max-w-2xl p-6">
         <h1 className="text-3xl font-extrabold mb-4 text-white drop-shadow-sm">
           Vérifie ta <span className="text-violet-600">finançabilité</span>
         </h1>
@@ -85,9 +85,8 @@ export default function CalcPage() {
             )}
             className="space-y-4 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-xl p-6"
           >
-            {step === 0 && <StepCredits />}
-            {step === 1 && <StepEchecs />}
-            {step === 2 && <StepAnnee />}
+            {step === 0 && <StepNationalite />}
+            {step === 1 && <StepAca />}
             <div className="flex gap-2 mt-6">
               {step > 0 && (
                 <button
@@ -98,7 +97,7 @@ export default function CalcPage() {
                   Précédent
                 </button>
               )}
-              {step < 2 && (
+              {step < 3 && (
                 <button
                   type="button"
                   onClick={handleNext}
@@ -107,7 +106,7 @@ export default function CalcPage() {
                   Suivant
                 </button>
               )}
-              {step === 2 && (
+              {step === 3 && (
                 <button
                   type="submit"
                   disabled={methods.formState.isSubmitting}
