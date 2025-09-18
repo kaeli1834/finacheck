@@ -8,8 +8,16 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { StepNationalite, StepAca } from "@/components/CalcSteps";
 import { canUseCookies } from "@/lib/cookies";
-import { saveFormData, loadFormData, clearFormData } from "@/lib/clientStorage";
+import {
+  saveFormData,
+  loadFormData,
+  clearFormData,
+  getStorageMode,
+} from "@/lib/clientStorage";
 import StorageModeWarning from "@/components/StorageModeWarning";
+import ProgressIndicator from "@/components/ProgressIndicator";
+import DebugPanel from "@/components/DebugPanel";
+import { clear } from "console";
 
 // Schéma de validation
 const Schema = z.object({
@@ -39,7 +47,7 @@ export default function CalcPage() {
   useEffect(() => {
     const savedData = loadFormData();
     if (savedData) {
-      Object.keys(savedData).forEach(key => {
+      Object.keys(savedData).forEach((key) => {
         methods.setValue(key as keyof FormData, savedData[key]);
       });
     }
@@ -48,7 +56,9 @@ export default function CalcPage() {
   // Sauvegarde automatique des données
   useEffect(() => {
     const subscription = methods.watch((data) => {
-      if (Object.keys(data).some(key => data[key] !== undefined)) {
+      if (Object.keys(data).some((key) => data[key] !== undefined)) {
+        console.log("Saving form data:", data);
+        console.log("mode de storage", getStorageMode());
         saveFormData(data);
       }
     });
@@ -73,15 +83,15 @@ export default function CalcPage() {
   const onSubmit = async (data: FormData) => {
     setResult(null);
     setError(null);
-    
+
     const useCookies = canUseCookies();
-    
+
     try {
       const res = await fetch("/api/calc", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "X-Cookie-Consent": useCookies ? "accepted" : "declined"
+          "X-Cookie-Consent": useCookies ? "accepted" : "declined",
         },
         body: JSON.stringify(data),
       });
@@ -110,6 +120,13 @@ export default function CalcPage() {
           Vérifie ta <span className="text-violet-600">finançabilité</span>
         </h1>
         <StorageModeWarning />
+
+        <ProgressIndicator
+          currentStep={step}
+          totalSteps={4}
+          stepLabels={["Nationalité", "Parcours", "Crédits", "Année"]}
+        />
+
         <FormProvider {...methods}>
           <form
             onSubmit={methods.handleSubmit(
@@ -117,8 +134,18 @@ export default function CalcPage() {
             )}
             className="space-y-4 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-xl p-6"
           >
-            {step === 0 && <StepNationalite />}
-            {step === 1 && <StepAca />}
+            <div className="min-h-[400px] transition-all duration-300 ease-in-out">
+              {step === 0 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                  <StepNationalite />
+                </div>
+              )}
+              {step === 1 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                  <StepAca />
+                </div>
+              )}
+            </div>
             <div className="flex gap-2 mt-6">
               {step > 0 && (
                 <button
