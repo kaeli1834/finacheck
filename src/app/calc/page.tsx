@@ -3,10 +3,13 @@
 import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Navbar from "@/components/Navbar";
 import { StepNationalite, StepAca } from "@/components/CalcSteps";
+import { canUseCookies } from "@/lib/cookies";
+import { saveFormData, loadFormData, clearFormData } from "@/lib/clientStorage";
+import StorageModeWarning from "@/components/StorageModeWarning";
 
 // Schéma de validation
 const Schema = z.object({
@@ -32,6 +35,26 @@ export default function CalcPage() {
   const [result, setResult] = useState<CalcResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Chargement des données sauvegardées
+  useEffect(() => {
+    const savedData = loadFormData();
+    if (savedData) {
+      Object.keys(savedData).forEach(key => {
+        methods.setValue(key as keyof FormData, savedData[key]);
+      });
+    }
+  }, [methods]);
+
+  // Sauvegarde automatique des données
+  useEffect(() => {
+    const subscription = methods.watch((data) => {
+      if (Object.keys(data).some(key => data[key] !== undefined)) {
+        saveFormData(data);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [methods]);
+
   const stepFields: Array<Array<keyof FormData>> = [
     // 1. Nationalité
     ["nationalite"],
@@ -50,15 +73,23 @@ export default function CalcPage() {
   const onSubmit = async (data: FormData) => {
     setResult(null);
     setError(null);
+    
+    const useCookies = canUseCookies();
+    
     try {
       const res = await fetch("/api/calc", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "X-Cookie-Consent": useCookies ? "accepted" : "declined"
+        },
         body: JSON.stringify(data),
       });
       const json = await res.json();
       if (json.ok) {
         setResult(json.result as CalcResult);
+        // Nettoyage des données après calcul réussi
+        clearFormData();
       } else {
         setError(json.error || "Erreur inconnue");
       }
@@ -78,6 +109,7 @@ export default function CalcPage() {
         <h1 className="text-3xl font-extrabold mb-4 text-white drop-shadow-sm">
           Vérifie ta <span className="text-violet-600">finançabilité</span>
         </h1>
+        <StorageModeWarning />
         <FormProvider {...methods}>
           <form
             onSubmit={methods.handleSubmit(
