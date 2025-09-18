@@ -142,8 +142,25 @@ export default function PrivacyPage() {
       <section id="cookies" className="mb-8 scroll-mt-24">
         <h2>Cookies</h2>
         <p>
-          L’app fonctionne sans cookies non essentiels. Si une mesure d’audience
-          est activée, un bandeau de consentement sera proposé.
+          <strong>Cookie technique essentiel :</strong> Un cookie nommé "calc" 
+          est utilisé pour sauvegarder temporairement vos saisies pendant le 
+          processus de calcul. Ce cookie :
+        </p>
+        <ul>
+          <li>Est chiffré et sécurisé (AES-256-GCM)</li>
+          <li>Expire automatiquement après 1 heure</li>
+          <li>Est supprimé après le calcul</li>
+          <li>Ne contient aucune donnée personnelle identifiante</li>
+          <li>Est nécessaire au bon fonctionnement du service</li>
+        </ul>
+        <p>
+          <strong>Cookies non essentiels :</strong> Aucun cookie de tracking, 
+          publicité ou mesure d'audience n'est utilisé actuellement. Si cela 
+          devait changer, un bandeau de consentement sera proposé.
+        </p>
+        <p>
+          <strong>Votre choix :</strong> Vous pouvez refuser le cookie technique, 
+          mais le service ne pourra alors pas fonctionner correctement.
         </p>
       </section>
 
