@@ -2,13 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { getStorageMode } from "@/lib/clientStorage";
+import { useCookieConsent } from "@/hooks/useCookieConsent";
 
 export default function StorageModeWarning() {
   const [storageMode, setStorageMode] = useState<string | null>(null);
+  const cookieConsent = useCookieConsent();
 
   useEffect(() => {
     setStorageMode(getStorageMode());
   }, []);
+
+  // Mettre à jour le mode de stockage quand le consentement change
+  useEffect(() => {
+    if (cookieConsent !== null) {
+      setStorageMode(getStorageMode());
+    }
+  }, [cookieConsent]);
 
   if (!storageMode || storageMode === "session") return null;
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { dispatchCookieConsentChange } from "@/hooks/useCookieConsent";
 
 export default function CookieBanner() {
   const [showBanner, setShowBanner] = useState(false);
@@ -18,11 +19,13 @@ export default function CookieBanner() {
 
   const handleAccept = () => {
     localStorage.setItem("cookie-consent", "accepted");
+    dispatchCookieConsentChange("accepted");
     handleClose();
   };
 
   const handleDecline = () => {
     localStorage.setItem("cookie-consent", "declined");
+    dispatchCookieConsentChange("declined");
     // TODO: Implémenter la logique pour désactiver les cookies
     handleClose();
   };

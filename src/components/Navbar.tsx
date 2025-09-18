@@ -1,4 +1,5 @@
 import Link from "next/link";
+import DebugPanel from "./DebugPanel";
 
 type NavbarProps = {
   displayShorts: boolean;
@@ -45,6 +46,9 @@ export default function Navbar({
             </Link>
           </div>
         )}
+        
+        {/* Panel de debug dans la navbar */}
+        <DebugPanel />
       </div>
     </header>
   );

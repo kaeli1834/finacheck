@@ -1,226 +1,208 @@
-import { useFormContext, useFieldArray } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 
-//1. Check nationalité : UE ou HORS UE
+import RadioButtonGroup from "./form/RadioButtonGroup";
+import FieldGroup from "./form/FieldGroup";
+import AnneeCompactCard from "./parcours/AnneeCompactCard";
+import ProgressSummary from "./parcours/ProgressSummary";
+
+import { useParcours } from "@/hooks/useParcours";
+import { useFieldWatch } from "@/hooks/useFieldWatch";
+import { nationaliteOptions, assimileOptions } from "@/data/formOptions";
+import { ParcoursField } from "@/types/parcours";
+
+// 1. Check nationalité : UE ou HORS UE
 export function StepNationalite() {
   const {
-    register,
     formState: { errors },
-    watch,
   } = useFormContext();
-  const nationalite = watch("nationalite");
+
+  const nationalite = useFieldWatch("nationalite");
+
   return (
-    <div>
-      <label className="block text-sm font-medium">
-        Quelle est ta nationalité ?
-      </label>
-      <select
-        {...register("nationalite")}
-        className="mt-1 w-full border rounded p-2"
+    <div className="space-y-6">
+      <FieldGroup
+        label="Quelle est votre nationalité ?"
+        helpText="Cette information détermine les règles de finançabilité qui s'appliquent à votre situation"
       >
-        <option value="ue">UE</option>
-        <option value="hors_ue">HORS UE</option>
-      </select>
+        <RadioButtonGroup
+          name="nationalite"
+          options={nationaliteOptions}
+          layout="vertical"
+        />
+      </FieldGroup>
+
       {/* si HORS UE, check si assimilé */}
       {nationalite === "hors_ue" && (
-        <div>
-          <label className="block text-sm font-medium">
-            Es-tu assimilé*e ?
-          </label>
-          <select
-            {...register("assimilé")}
-            className="mt-1 w-full border rounded p-2"
+        <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+          <FieldGroup
+            label="Êtes-vous assimilé*e ?"
+            helpText="Statut spécial pour certains étrangers qui bénéficient des mêmes conditions que les citoyens UE"
           >
-            <option value="oui">Oui</option>
-            <option value="non">Non</option>
-          </select>
+            <RadioButtonGroup
+              name="assimilé"
+              options={assimileOptions}
+              colorScheme="amber"
+            />
+          </FieldGroup>
         </div>
       )}
+
       {errors.nationalite && (
-        <p className="text-red-600 text-sm">
-          {errors.nationalite.message as string}
-        </p>
+        <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+          <p className="text-red-700 dark:text-red-400 text-sm">
+            {errors.nationalite.message as string}
+          </p>
+        </div>
       )}
     </div>
   );
 }
 
-type ParcoursAcademiqueField = {
-  id: string;
-  annee: string;
-  premInscription: boolean;
-  sameInscription: boolean;
-  reorientation: boolean;
-  allegement: boolean;
-  creditsAcquis: string;
-  creditsEchecs: string;
-  etablissement?: string;
-  cursusType?: "premInscription" | "sameInscription" | "reorientation";
-};
+// Composant pour une année individuelle (maintenant compact)
+function AnneeCard({
+  field,
+  index,
+  isLast,
+}: {
+  field: ParcoursField;
+  index: number;
+  isLast: boolean;
+}) {
+  const { handleRemove, isCardExpanded, toggleCard } = useParcours();
 
-type StepAcaFormValues = {
-  parcoursAcademique: ParcoursAcademiqueField[];
-};
+  return (
+    <AnneeCompactCard
+      field={field}
+      index={index}
+      onRemove={() => handleRemove(index)}
+      isExpanded={isCardExpanded(index)}
+      onToggle={() => toggleCard(index)}
+      isLast={isLast}
+    />
+  );
+}
 
-export function StepAca() {
-  const {
-    register,
-    control,
-    formState: { errors },
-  } = useFormContext<StepAcaFormValues>();
+// Composant pour l'état vide
+function EmptyState({ onAdd }: { onAdd: () => void }) {
+  return (
+    <div className="text-center py-8 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg">
+      <div className="text-slate-400 dark:text-slate-500 mb-2">📚</div>
+      <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+        Aucune année ajoutée
+      </p>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+      >
+        Ajouter votre première année
+      </button>
+    </div>
+  );
+}
 
-  const { fields, append, remove } = useFieldArray<StepAcaFormValues>({
-    control,
-    name: "parcoursAcademique",
-  });
-
-  // Helper to get next academic year string
-  function getNextAcademicYear(index: number) {
-    const now = new Date();
-    // If before August, academic year is previous year - current year
-    const currentYear =
-      now.getMonth() < 7 ? now.getFullYear() : now.getFullYear();
-    const start = currentYear - index - 1;
-    const end = start + 1;
-    return `${start}-${end}`;
+// Composant pour le bouton d'ajout
+function AddButton({
+  onAdd,
+  canAdd,
+  hasPremiereInscription,
+}: {
+  onAdd: () => void;
+  canAdd: boolean;
+  hasPremiereInscription: boolean;
+}) {
+  if (!canAdd) {
+    return (
+      <div className="w-full py-3 px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+        <div className="flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
+          <div className="text-center">
+            <p className="text-sm">Ajout bloqué</p>
+            {hasPremiereInscription && (
+              <p className="text-xs mt-1">
+                Vous avez déjà ajouté votre première inscription dans le
+                supérieur.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
-  const handleAdd = () => {
-    append({
-      id: `${Date.now()}-${fields.length}`,
-      annee: getNextAcademicYear(fields.length),
-      premInscription: false,
-      sameInscription: false,
-      reorientation: false,
-      allegement: false,
-      creditsAcquis: "",
-      creditsEchecs: "",
-    });
-  };
+  return (
+    <button
+      type="button"
+      onClick={onAdd}
+      className="w-full flex items-center justify-center gap-2 py-3 px-4 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg text-slate-600 dark:text-slate-400 hover:border-violet-400 hover:text-violet-600 dark:hover:text-violet-400 transition-colors"
+    >
+      <span className="text-lg">➕</span>
+      Ajouter une année
+    </button>
+  );
+}
+
+// Composant principal du parcours académique
+export function StepAca() {
+  const {
+    formState: { errors },
+  } = useFormContext();
+
+  const { fields, handleAdd, isEmpty, canAdd, hasPremiereInscription } =
+    useParcours();
+
+  console.log("StepAca render:", {
+    fieldsLength: fields.length,
+    isEmpty,
+    fieldsData: fields.map((f) => ({
+      id: f.id,
+      annee: f.annee,
+      typeAnnee: f.typeAnnee,
+    })),
+  });
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-2">
-        Parcours académique
-      </label>
-      <div className="">
-        <table className="w-full min-w-max border mb-2 text-xs">
-          <thead>
-            <tr>
-              <th
-                className="border px-1 py-1 text-xs"
-                style={{ width: "80px" }}
-              >
-                Année
-              </th>
-              <th>
-                {/* check si same inscription, reorientation */}
-                <span className="px-1 py-1 text-xs">Cursus</span>
-              </th>
-              <th
-                className="border px-1 py-1 text-xs"
-                style={{ width: "100px" }}
-              >
-                Crédits acquis
-              </th>
-              <th
-                className="border px-1 py-1 text-xs"
-                style={{ width: "100px" }}
-              >
-                Crédits Inscrits
-              </th>
-              <th className="border px-1 py-1 w-8"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {fields.map((field, idx) => (
-              <tr key={field.id}>
-                <td className="border px-1 py-1">
-                  <input
-                    type="text"
-                    {...register(`parcoursAcademique.${idx}.annee`)}
-                    className="w-full rounded p-1 text-xs"
-                    value={field.annee}
-                    readOnly
-                  />
-                </td>
-                <td className="border px-1 py-1">
-                  {/* Radio buttons for cursus type */}
-                  <label className="px-1 py-1 text-xs">
-                    <input
-                      type="radio"
-                      {...register(`parcoursAcademique.${idx}.cursusType`)}
-                      value="premInscription"
-                      className="mr-1"
-                    />
-                    Première inscription
-                  </label>
-                  <span className="mx-2">|</span>
-                  <label className="px-1 py-1 text-xs">
-                    <input
-                      type="radio"
-                      {...register(`parcoursAcademique.${idx}.cursusType`)}
-                      value="sameInscription"
-                      className="mr-1"
-                    />
-                    Continuation
-                    <span
-                      className="ml-1 cursor-pointer"
-                      title="Si vous continuez dans le même cursus que l'année académique précédente, cochez cette case. 
-                  Si vous avez changé de cursus ou de formation, laissez-la décochée."
-                    >
-                      {/* TODO: add icon here */}?
-                    </span>
-                  </label>
-                  <span className="mx-2">|</span>
-                  <label className="px-1 py-1 text-xs">
-                    <input
-                      type="radio"
-                      {...register(`parcoursAcademique.${idx}.cursusType`)}
-                      value="reorientation"
-                      className="mr-1"
-                    />
-                    Réorientation
-                  </label>
-                </td>
-                <td className="border px-1 py-1">
-                  <input
-                    type="text"
-                    {...register(`parcoursAcademique.${idx}.etablissement`)}
-                    className="w-full border rounded p-1 text-xs"
-                  />
-                </td>
-                <td className="border px-1 py-1">
-                  <input
-                    type="number"
-                    {...register(`parcoursAcademique.${idx}.creditsEchecs`)}
-                    className="w-full border rounded p-1 text-xs"
-                  />
-                </td>
-                <td className="border px-1 py-1">
-                  <button
-                    type="button"
-                    onClick={() => remove(idx)}
-                    className="text-red-600 text-xs"
-                  >
-                    Supprimer
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <button
-        type="button"
-        onClick={handleAdd}
-        className="bg-blue-500 text-white px-3 py-1 rounded text-xs"
-      >
-        Ajouter une ligne
-      </button>
-      {errors.parcoursAcademique && (
-        <p className="text-red-600 text-sm mt-2">
-          {errors.parcoursAcademique.message as string}
+      <div className="mb-4">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
+          Parcours académique
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Remplissez chaque année jusqu&apos;à votre première inscription pour
+          calculer votre finançabilité
         </p>
+      </div>
+
+      {/* Progress Summary */}
+      <ProgressSummary />
+
+      <div className="space-y-4">
+        {isEmpty ? (
+          <EmptyState onAdd={handleAdd} />
+        ) : (
+          <>
+            {fields.map((field, idx) => (
+              <AnneeCard
+                key={field.id}
+                field={field}
+                index={idx}
+                isLast={idx === fields.length - 1}
+              />
+            ))}
+            <AddButton
+              onAdd={handleAdd}
+              canAdd={canAdd()}
+              hasPremiereInscription={hasPremiereInscription()}
+            />
+          </>
+        )}
+      </div>
+
+      {errors.parcoursAcademique && (
+        <div className="mt-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+          <p className="text-red-700 dark:text-red-400 text-sm">
+            {errors.parcoursAcademique.message as string}
+          </p>
+        </div>
       )}
     </div>
   );
@@ -233,7 +215,9 @@ export function StepAnnee() {
   } = useFormContext();
   return (
     <div>
-      <label className="block text-sm font-medium">Année d’inscription</label>
+      <label className="block text-sm font-medium">
+        Année d&apos;inscription
+      </label>
       <input
         type="number"
         {...register("anneeInscription")}

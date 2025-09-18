@@ -8,24 +8,97 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { StepNationalite, StepAca } from "@/components/CalcSteps";
 import { canUseCookies } from "@/lib/cookies";
-import { saveFormData, loadFormData, clearFormData } from "@/lib/clientStorage";
+import {
+  saveFormData,
+  loadFormData,
+  clearFormData,
+  getStorageMode,
+} from "@/lib/clientStorage";
 import StorageModeWarning from "@/components/StorageModeWarning";
+import ProgressIndicator from "@/components/ProgressIndicator";
+import { ParcoursAcademiqueField } from "@/types/parcours";
+import { validateParcoursField } from "@/utils/validation";
 
-// Schéma de validation
+// TODO: Définir le schéma Zod pour le formulaire
 const Schema = z.object({
-  nationalite: z.enum(["ue", "hors_ue"]),
-  assimilé: z.enum(["oui", "non"]).optional(),
-  creditsAcquis: z.coerce.number().int().min(0).max(300),
-  creditsEchecs: z.coerce.number().int().min(0).max(300),
-  anneeInscription: z.coerce.number().int().min(2000).max(2100),
+  // Ajoutez ici les champs attendus dans votre formulaire
+  // Exemple :
+  nationalite: z.string(),
+  parcoursAcademique: z.array(
+    z.object({
+      cursusType: z.string(),
+      // Ajoutez les autres champs nécessaires ici
+    })
+  ),
+  // Ajoutez les autres champs du formulaire ici
 });
-type FormData = z.infer<typeof Schema>;
 
 // Type for API result
 type CalcResult = {
   statut: string;
   ratio?: number;
 };
+
+// Composant pour le bouton Suivant avec validation conditionnelle
+function NextButton({
+  currentStep,
+  onNext,
+  methods,
+}: {
+  currentStep: number;
+  onNext: () => void;
+  methods: import("react-hook-form").UseFormReturn<z.input<typeof Schema>>;
+}) {
+  // Pour l'étape 1 (parcours académique), vérifier qu'il y a une première inscription + formulaire complet
+  const isDisabled =
+    currentStep === 1 &&
+    (() => {
+      const parcoursData = methods.watch(
+        "parcoursAcademique"
+      ) as ParcoursAcademiqueField[];
+      const hasPremiereInscription = parcoursData?.some(
+        (parcours) => parcours?.cursusType === "premInscription"
+      );
+      return (
+        !hasPremiereInscription ||
+        !parcoursData ||
+        parcoursData.length === 0 ||
+        (() => {
+          // Vérifier que le formulaire est complet
+          return !parcoursData?.every((parcours) => parcours?.isComplete);
+        })()
+      );
+    })();
+
+  return (
+    <button
+      type="button"
+      onClick={onNext}
+      disabled={isDisabled}
+      className={`flex-1 rounded p-2 font-semibold transition-all ${
+        isDisabled
+          ? "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+          : "bg-violet-600 text-white hover:brightness-110"
+      }`}
+      title={
+        isDisabled
+          ? "Ajoutez au moins une année avec 'Première inscription' pour continuer"
+          : "Passer à l'étape suivante"
+      }
+    >
+      Suivant
+    </button>
+  );
+}
+
+// Liste des champs à valider pour chaque étape du formulaire
+const stepFields: Array<keyof z.infer<typeof Schema>> = [
+  "nationalite",
+  "parcoursAcademique",
+  // Ajoutez ici les autres champs pour les étapes suivantes, par exemple:
+  // "credits",
+  // "annee",
+];
 
 export default function CalcPage() {
   const methods = useForm<z.input<typeof Schema>>({
@@ -39,31 +112,53 @@ export default function CalcPage() {
   useEffect(() => {
     const savedData = loadFormData();
     if (savedData) {
-      Object.keys(savedData).forEach(key => {
-        methods.setValue(key as keyof FormData, savedData[key]);
-      });
+      (Object.keys(savedData) as Array<keyof typeof Schema.shape>).forEach(
+        (key) => {
+          methods.setValue(
+            key,
+            savedData[key] as z.infer<typeof Schema>[typeof key]
+          );
+        }
+      );
     }
   }, [methods]);
 
   // Sauvegarde automatique des données
   useEffect(() => {
     const subscription = methods.watch((data) => {
-      if (Object.keys(data).some(key => data[key] !== undefined)) {
+      if (
+        (Object.keys(data) as Array<keyof typeof data>).some(
+          (key) => data[key] !== undefined
+        )
+      ) {
+        console.log("Saving form data:", data);
+        console.log("mode de storage", getStorageMode());
         saveFormData(data);
       }
     });
     return () => subscription.unsubscribe();
   }, [methods]);
 
-  const stepFields: Array<Array<keyof FormData>> = [
-    // 1. Nationalité
-    ["nationalite"],
-    ["creditsAcquis"],
-    ["creditsEchecs"],
-    ["anneeInscription"],
-  ];
-
   const handleNext = async () => {
+    // Pour l'étape 1 (parcours académique), vérifier qu'il y a une première inscription
+    if (step === 1) {
+      const parcoursData = methods.watch(
+        "parcoursAcademique"
+      ) as ParcoursAcademiqueField[];
+      const hasPremiereInscription = parcoursData?.some(
+        (parcours) => parcours?.cursusType === "premInscription"
+      );
+
+      if (
+        !hasPremiereInscription ||
+        !parcoursData ||
+        parcoursData.length === 0
+      ) {
+        // Ne pas permettre de passer à l'étape suivante
+        return;
+      }
+    }
+
     const valid = await methods.trigger(stepFields[step]);
     if (valid) setStep((s) => s + 1);
   };
@@ -73,15 +168,15 @@ export default function CalcPage() {
   const onSubmit = async (data: FormData) => {
     setResult(null);
     setError(null);
-    
+
     const useCookies = canUseCookies();
-    
+
     try {
       const res = await fetch("/api/calc", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "X-Cookie-Consent": useCookies ? "accepted" : "declined"
+          "X-Cookie-Consent": useCookies ? "accepted" : "declined",
         },
         body: JSON.stringify(data),
       });
@@ -110,6 +205,13 @@ export default function CalcPage() {
           Vérifie ta <span className="text-violet-600">finançabilité</span>
         </h1>
         <StorageModeWarning />
+
+        <ProgressIndicator
+          currentStep={step}
+          totalSteps={4}
+          stepLabels={["Nationalité", "Parcours", "Crédits", "Année"]}
+        />
+
         <FormProvider {...methods}>
           <form
             onSubmit={methods.handleSubmit(
@@ -117,8 +219,18 @@ export default function CalcPage() {
             )}
             className="space-y-4 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-md shadow-xl p-6"
           >
-            {step === 0 && <StepNationalite />}
-            {step === 1 && <StepAca />}
+            <div className="min-h-[400px] transition-all duration-300 ease-in-out">
+              {step === 0 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                  <StepNationalite />
+                </div>
+              )}
+              {step === 1 && (
+                <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                  <StepAca />
+                </div>
+              )}
+            </div>
             <div className="flex gap-2 mt-6">
               {step > 0 && (
                 <button
@@ -130,13 +242,11 @@ export default function CalcPage() {
                 </button>
               )}
               {step < 3 && (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="flex-1 bg-violet-600 text-white rounded p-2 font-semibold hover:brightness-110"
-                >
-                  Suivant
-                </button>
+                <NextButton
+                  currentStep={step}
+                  onNext={handleNext}
+                  methods={methods}
+                />
               )}
               {step === 3 && (
                 <button
