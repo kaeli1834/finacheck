@@ -38,14 +38,10 @@ export default function AnneeCompactCard({
     continuationType:
       watch(`parcoursAcademique.${index}.continuationType`) ||
       field.continuationType,
-    etablissement:
-      watch(`parcoursAcademique.${index}.etablissement`) || field.etablissement,
     creditsAcquis:
       watch(`parcoursAcademique.${index}.creditsAcquis`) || field.creditsAcquis,
     creditsEchecs:
       watch(`parcoursAcademique.${index}.creditsEchecs`) || field.creditsEchecs,
-    description:
-      watch(`parcoursAcademique.${index}.description`) || field.description,
   };
 
   const validation = validateParcoursField(currentFieldData);
@@ -71,9 +67,30 @@ export default function AnneeCompactCard({
         reorientation: "🔄",
         diplome: "🎓",
       };
+      let text = cursusType
+        ? cursusType === "premInscription"
+          ? "Première inscription"
+          : cursusType === "sameInscription"
+          ? "Continuation"
+          : cursusType === "reorientation"
+          ? "Réorientation"
+          : cursusType === "diplome"
+          ? "Année de diplôme"
+          : "Type non défini"
+        : "Type non défini";
+
+      if (cursusType === "sameInscription") {
+        text +=
+          currentFieldData.continuationType === "bloc1"
+            ? " - Bloc 1"
+            : currentFieldData.continuationType === "bloc2-3"
+            ? " - Bloc 2/3"
+            : "";
+      }
+      console.log(cursusType, text);
       return {
         icon: cursusIcons[cursusType as keyof typeof cursusIcons] || "🎓",
-        label: currentFieldData.etablissement || "Établissement non défini",
+        label: text,
       };
     } else {
       const autreType = currentFieldData.autreType;
@@ -82,12 +99,28 @@ export default function AnneeCompactCard({
         promotion_sociale: "📚",
         autre_activite: "💼",
       };
+      let text = autreType
+        ? autreType === "academique_hors_fwb"
+          ? "Académique hors FWB"
+          : autreType === "promotion_sociale"
+          ? "Promotion sociale"
+          : autreType === "autre_activite"
+          ? "Autre activité"
+          : "Type non défini"
+        : "Type non défini";
+
+      if (
+        autreType === "academique_hors_fwb" &&
+        currentFieldData.concoursType
+      ) {
+        text +=
+          currentFieldData.concoursType === "oui"
+            ? " - Concours (réussi)"
+            : " - Concours (raté)";
+      }
       return {
         icon: autreIcons[autreType as keyof typeof autreIcons] || "🔄",
-        label:
-          autreType === "academique_hors_fwb"
-            ? currentFieldData.etablissement || "Établissement hors FWB"
-            : currentFieldData.description || "Description manquante",
+        label: text,
       };
     }
   };

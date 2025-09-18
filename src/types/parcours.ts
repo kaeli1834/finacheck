@@ -10,10 +10,10 @@ export type ParcoursAcademiqueField = {
     | "premInscription"
     | "sameInscription"
     | "reorientation"
-    | "diplome";
+    | "diplome"
+    | "";
   continuationType?: "bloc1" | "bloc2-3";
   isDiplome: boolean;
-  etablissement?: string;
   description?: string;
   concoursType?: "oui" | "non";
   concoursOption?: "réussi" | "raté";

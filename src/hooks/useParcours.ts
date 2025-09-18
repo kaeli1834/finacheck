@@ -11,7 +11,20 @@ export function useParcours() {
     name: "parcoursAcademique",
   });
 
+  // Vérifie s'il y a une "Première inscription" dans le parcours
+  const hasPremiereInscription = () => {
+    return fields.some((_, index) => {
+      const fieldData = watch(`parcoursAcademique.${index}`) as ParcoursAcademiqueField;
+      return fieldData?.cursusType === "premInscription";
+    });
+  };
+
   const handleAdd = () => {
+    // Bloquer l'ajout si "Première inscription" est sélectionnée
+    if (hasPremiereInscription()) {
+      return;
+    }
+
     const newField = createNewParcoursField(fields.length);
     append({
       ...newField,
@@ -23,8 +36,14 @@ export function useParcours() {
     remove(index);
   };
 
+  // Permettre la suppression totale de la dernière année (supprimer la condition fields.length > 1)
   const canRemove = (index: number) => {
-    return fields.length > 1 && index === fields.length - 1;
+    return index === fields.length - 1;
+  };
+
+  // Vérifier si l'ajout est autorisé
+  const canAdd = () => {
+    return !hasPremiereInscription();
   };
 
   // Validation de tous les champs
@@ -56,8 +75,10 @@ export function useParcours() {
     handleAdd,
     handleRemove,
     canRemove,
+    canAdd,
     isEmpty: fields.length === 0,
     getFieldValidation,
     getGlobalStats,
+    hasPremiereInscription,
   };
 }

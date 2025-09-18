@@ -16,9 +16,8 @@ export function createNewParcoursField(fieldsLength: number): Omit<ParcoursAcade
     allegement: false,
     creditsAcquis: "",
     creditsEchecs: "",
-    cursusType: "premInscription",
+    cursusType: "",
     isDiplome: false,
-    etablissement: "",
     description: "",
   };
 }

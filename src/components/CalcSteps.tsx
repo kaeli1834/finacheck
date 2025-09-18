@@ -8,10 +8,7 @@ import ProgressSummary from "./parcours/ProgressSummary";
 
 import { useParcours } from "@/hooks/useParcours";
 import { useFieldWatch } from "@/hooks/useFieldWatch";
-import {
-  nationaliteOptions,
-  assimileOptions,
-} from "@/data/formOptions";
+import { nationaliteOptions, assimileOptions } from "@/data/formOptions";
 
 // 1. Check nationalité : UE ou HORS UE
 export function StepNationalite() {
@@ -95,7 +92,33 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 }
 
 // Composant pour le bouton d'ajout
-function AddButton({ onAdd }: { onAdd: () => void }) {
+function AddButton({
+  onAdd,
+  canAdd,
+  hasPremiereInscription,
+}: {
+  onAdd: () => void;
+  canAdd: boolean;
+  hasPremiereInscription: boolean;
+}) {
+  if (!canAdd) {
+    return (
+      <div className="w-full py-3 px-4 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/50">
+        <div className="flex items-center justify-center gap-2 text-slate-400 dark:text-slate-500">
+          <div className="text-center">
+            <p className="text-sm">Ajout bloqué</p>
+            {hasPremiereInscription && (
+              <p className="text-xs mt-1">
+                Vous avez déjà ajouté votre première inscription dans le
+                supérieur.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -114,7 +137,8 @@ export function StepAca() {
     formState: { errors },
   } = useFormContext();
 
-  const { fields, handleAdd, isEmpty } = useParcours();
+  const { fields, handleAdd, isEmpty, canAdd, hasPremiereInscription } =
+    useParcours();
 
   return (
     <div>
@@ -123,7 +147,8 @@ export function StepAca() {
           Parcours académique
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Remplissez chaque année pour calculer votre finançabilité
+          Remplissez chaque année jusqu'à votre première inscription pour
+          calculer votre finançabilité
         </p>
       </div>
 
@@ -138,7 +163,11 @@ export function StepAca() {
             {fields.map((field, idx) => (
               <AnneeCard key={field.id} field={field} index={idx} />
             ))}
-            <AddButton onAdd={handleAdd} />
+            <AddButton
+              onAdd={handleAdd}
+              canAdd={canAdd()}
+              hasPremiereInscription={hasPremiereInscription()}
+            />
           </>
         )}
       </div>
