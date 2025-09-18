@@ -8,10 +8,12 @@ import {
   getStorageMode,
 } from "@/lib/clientStorage";
 import { canUseCookies, getCookieConsent } from "@/lib/cookies";
+import { useCookieConsent } from "@/hooks/useCookieConsent";
 
 export default function DebugPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const methods = useFormContext();
+  const cookieConsent = useCookieConsent();
 
   if (process.env.NODE_ENV !== "development") return null;
 
@@ -81,7 +83,7 @@ export default function DebugPanel() {
           </div>
           <div className="text-xs">
             <strong>🗳️ Consentement:</strong>{" "}
-            {getCookieConsent() || "Non défini"}
+            {cookieConsent || "Non défini"}
           </div>
           <div className="text-xs">
             <strong>💾 Mode:</strong> {getStorageMode()}
