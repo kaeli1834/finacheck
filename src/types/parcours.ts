@@ -17,7 +17,10 @@ export type ParcoursAcademiqueField = {
   description?: string;
   concoursType?: "oui" | "non";
   concoursOption?: "réussi" | "raté";
+  isComplete?: boolean;
 };
+
+export type ParcoursField = ParcoursAcademiqueField;
 
 export type StepAcaFormValues = {
   parcoursAcademique: ParcoursAcademiqueField[];

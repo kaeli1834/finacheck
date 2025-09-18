@@ -16,24 +16,89 @@ import {
 } from "@/lib/clientStorage";
 import StorageModeWarning from "@/components/StorageModeWarning";
 import ProgressIndicator from "@/components/ProgressIndicator";
-import DebugPanel from "@/components/DebugPanel";
-import { clear } from "console";
+import { ParcoursAcademiqueField } from "@/types/parcours";
+import { validateParcoursField } from "@/utils/validation";
 
-// Schéma de validation
+// TODO: Définir le schéma Zod pour le formulaire
 const Schema = z.object({
-  nationalite: z.enum(["ue", "hors_ue"]),
-  assimilé: z.enum(["oui", "non"]).optional(),
-  creditsAcquis: z.coerce.number().int().min(0).max(300),
-  creditsEchecs: z.coerce.number().int().min(0).max(300),
-  anneeInscription: z.coerce.number().int().min(2000).max(2100),
+  // Ajoutez ici les champs attendus dans votre formulaire
+  // Exemple :
+  nationalite: z.string(),
+  parcoursAcademique: z.array(
+    z.object({
+      cursusType: z.string(),
+      // Ajoutez les autres champs nécessaires ici
+    })
+  ),
+  // Ajoutez les autres champs du formulaire ici
 });
-type FormData = z.infer<typeof Schema>;
 
 // Type for API result
 type CalcResult = {
   statut: string;
   ratio?: number;
 };
+
+// Composant pour le bouton Suivant avec validation conditionnelle
+function NextButton({
+  currentStep,
+  onNext,
+  methods,
+}: {
+  currentStep: number;
+  onNext: () => void;
+  methods: import("react-hook-form").UseFormReturn<z.input<typeof Schema>>;
+}) {
+  // Pour l'étape 1 (parcours académique), vérifier qu'il y a une première inscription + formulaire complet
+  const isDisabled =
+    currentStep === 1 &&
+    (() => {
+      const parcoursData = methods.watch(
+        "parcoursAcademique"
+      ) as ParcoursAcademiqueField[];
+      const hasPremiereInscription = parcoursData?.some(
+        (parcours) => parcours?.cursusType === "premInscription"
+      );
+      return (
+        !hasPremiereInscription ||
+        !parcoursData ||
+        parcoursData.length === 0 ||
+        (() => {
+          // Vérifier que le formulaire est complet
+          return !parcoursData?.every((parcours) => parcours?.isComplete);
+        })()
+      );
+    })();
+
+  return (
+    <button
+      type="button"
+      onClick={onNext}
+      disabled={isDisabled}
+      className={`flex-1 rounded p-2 font-semibold transition-all ${
+        isDisabled
+          ? "bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed"
+          : "bg-violet-600 text-white hover:brightness-110"
+      }`}
+      title={
+        isDisabled
+          ? "Ajoutez au moins une année avec 'Première inscription' pour continuer"
+          : "Passer à l'étape suivante"
+      }
+    >
+      Suivant
+    </button>
+  );
+}
+
+// Liste des champs à valider pour chaque étape du formulaire
+const stepFields: Array<keyof z.infer<typeof Schema>> = [
+  "nationalite",
+  "parcoursAcademique",
+  // Ajoutez ici les autres champs pour les étapes suivantes, par exemple:
+  // "credits",
+  // "annee",
+];
 
 export default function CalcPage() {
   const methods = useForm<z.input<typeof Schema>>({
@@ -47,16 +112,25 @@ export default function CalcPage() {
   useEffect(() => {
     const savedData = loadFormData();
     if (savedData) {
-      Object.keys(savedData).forEach((key) => {
-        methods.setValue(key as keyof FormData, savedData[key]);
-      });
+      (Object.keys(savedData) as Array<keyof typeof Schema.shape>).forEach(
+        (key) => {
+          methods.setValue(
+            key,
+            savedData[key] as z.infer<typeof Schema>[typeof key]
+          );
+        }
+      );
     }
   }, [methods]);
 
   // Sauvegarde automatique des données
   useEffect(() => {
     const subscription = methods.watch((data) => {
-      if (Object.keys(data).some((key) => data[key] !== undefined)) {
+      if (
+        (Object.keys(data) as Array<keyof typeof data>).some(
+          (key) => data[key] !== undefined
+        )
+      ) {
         console.log("Saving form data:", data);
         console.log("mode de storage", getStorageMode());
         saveFormData(data);
@@ -65,15 +139,26 @@ export default function CalcPage() {
     return () => subscription.unsubscribe();
   }, [methods]);
 
-  const stepFields: Array<Array<keyof FormData>> = [
-    // 1. Nationalité
-    ["nationalite"],
-    ["creditsAcquis"],
-    ["creditsEchecs"],
-    ["anneeInscription"],
-  ];
-
   const handleNext = async () => {
+    // Pour l'étape 1 (parcours académique), vérifier qu'il y a une première inscription
+    if (step === 1) {
+      const parcoursData = methods.watch(
+        "parcoursAcademique"
+      ) as ParcoursAcademiqueField[];
+      const hasPremiereInscription = parcoursData?.some(
+        (parcours) => parcours?.cursusType === "premInscription"
+      );
+
+      if (
+        !hasPremiereInscription ||
+        !parcoursData ||
+        parcoursData.length === 0
+      ) {
+        // Ne pas permettre de passer à l'étape suivante
+        return;
+      }
+    }
+
     const valid = await methods.trigger(stepFields[step]);
     if (valid) setStep((s) => s + 1);
   };
@@ -157,13 +242,11 @@ export default function CalcPage() {
                 </button>
               )}
               {step < 3 && (
-                <button
-                  type="button"
-                  onClick={handleNext}
-                  className="flex-1 bg-violet-600 text-white rounded p-2 font-semibold hover:brightness-110"
-                >
-                  Suivant
-                </button>
+                <NextButton
+                  currentStep={step}
+                  onNext={handleNext}
+                  methods={methods}
+                />
               )}
               {step === 3 && (
                 <button

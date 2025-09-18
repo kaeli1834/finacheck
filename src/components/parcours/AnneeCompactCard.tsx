@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import type { ParcoursAcademiqueField } from "@/types/parcours";
 import { validateParcoursField } from "@/utils/validation";
@@ -8,21 +7,25 @@ import AnneeAutre from "./AnneeAutre";
 import FieldGroup from "../form/FieldGroup";
 import RadioButtonGroup from "../form/RadioButtonGroup";
 import { typeAnneeOptions } from "@/data/formOptions";
+import { on } from "events";
 
 interface AnneeCompactCardProps {
   field: ParcoursAcademiqueField;
   index: number;
-  canRemove: boolean;
-  onRemove: () => void;
+  onRemove: (index: number) => void;
+  isExpanded: boolean;
+  onToggle: () => void;
+  isLast?: boolean;
 }
 
 export default function AnneeCompactCard({
   field,
   index,
-  canRemove,
   onRemove,
+  isExpanded,
+  onToggle,
+  isLast = false,
 }: AnneeCompactCardProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const { watch } = useFormContext();
   const { typeAnnee } = useParcoursFieldWatch(index);
 
@@ -87,7 +90,6 @@ export default function AnneeCompactCard({
             ? " - Bloc 2/3"
             : "";
       }
-      console.log(cursusType, text);
       return {
         icon: cursusIcons[cursusType as keyof typeof cursusIcons] || "🎓",
         label: text,
@@ -130,23 +132,29 @@ export default function AnneeCompactCard({
   if (isExpanded) {
     return (
       <div className={`rounded-lg p-4 border transition-all ${getCardStyle()}`}>
-        <div className="flex items-center justify-between mb-4">
+        <div
+          className="flex items-center justify-between mb-4"
+          onClick={onToggle}
+        >
           <h4 className="font-medium text-slate-900 dark:text-slate-100">
             Année {field.annee}
           </h4>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setIsExpanded(false)}
               className="text-slate-500 hover:text-slate-700 text-sm p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
               title="Réduire"
             >
               🔼
             </button>
-            {canRemove && (
+            {isLast && (
               <button
                 type="button"
-                onClick={onRemove}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRemove(index);
+                  console.log("Removing index", index);
+                }}
                 className="text-red-500 hover:text-red-700 text-sm p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 title="Supprimer cette année"
               >
@@ -183,7 +191,10 @@ export default function AnneeCompactCard({
   return (
     <div
       className={`rounded-lg p-3 border cursor-pointer transition-all hover:shadow-md ${getCardStyle()}`}
-      onClick={() => setIsExpanded(true)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -225,7 +236,13 @@ export default function AnneeCompactCard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 ml-2">
+        <div
+          className="flex items-center gap-2 ml-2"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+        >
           {/* Barre de progression */}
           {!validation.isValid && (
             <div className="w-12 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
@@ -244,12 +261,12 @@ export default function AnneeCompactCard({
             🔽
           </button>
 
-          {canRemove && (
+          {isLast && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onRemove();
+                onRemove(index);
               }}
               className="text-red-400 hover:text-red-600 text-sm p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
               title="Supprimer cette année"

@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 
-import HelpTooltip from "./HelpTooltip";
 import RadioButtonGroup from "./form/RadioButtonGroup";
 import FieldGroup from "./form/FieldGroup";
 import AnneeCompactCard from "./parcours/AnneeCompactCard";
@@ -9,6 +8,7 @@ import ProgressSummary from "./parcours/ProgressSummary";
 import { useParcours } from "@/hooks/useParcours";
 import { useFieldWatch } from "@/hooks/useFieldWatch";
 import { nationaliteOptions, assimileOptions } from "@/data/formOptions";
+import { ParcoursField } from "@/types/parcours";
 
 // 1. Check nationalité : UE ou HORS UE
 export function StepNationalite() {
@@ -59,15 +59,25 @@ export function StepNationalite() {
 }
 
 // Composant pour une année individuelle (maintenant compact)
-function AnneeCard({ field, index }: { field: any; index: number }) {
-  const { handleRemove, canRemove } = useParcours();
+function AnneeCard({
+  field,
+  index,
+  isLast,
+}: {
+  field: ParcoursField;
+  index: number;
+  isLast: boolean;
+}) {
+  const { handleRemove, isCardExpanded, toggleCard } = useParcours();
 
   return (
     <AnneeCompactCard
       field={field}
       index={index}
-      canRemove={canRemove(index)}
       onRemove={() => handleRemove(index)}
+      isExpanded={isCardExpanded(index)}
+      onToggle={() => toggleCard(index)}
+      isLast={isLast}
     />
   );
 }
@@ -140,6 +150,16 @@ export function StepAca() {
   const { fields, handleAdd, isEmpty, canAdd, hasPremiereInscription } =
     useParcours();
 
+  console.log("StepAca render:", {
+    fieldsLength: fields.length,
+    isEmpty,
+    fieldsData: fields.map((f) => ({
+      id: f.id,
+      annee: f.annee,
+      typeAnnee: f.typeAnnee,
+    })),
+  });
+
   return (
     <div>
       <div className="mb-4">
@@ -147,7 +167,7 @@ export function StepAca() {
           Parcours académique
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Remplissez chaque année jusqu'à votre première inscription pour
+          Remplissez chaque année jusqu&apos;à votre première inscription pour
           calculer votre finançabilité
         </p>
       </div>
@@ -161,7 +181,12 @@ export function StepAca() {
         ) : (
           <>
             {fields.map((field, idx) => (
-              <AnneeCard key={field.id} field={field} index={idx} />
+              <AnneeCard
+                key={field.id}
+                field={field}
+                index={idx}
+                isLast={idx === fields.length - 1}
+              />
             ))}
             <AddButton
               onAdd={handleAdd}
@@ -190,7 +215,9 @@ export function StepAnnee() {
   } = useFormContext();
   return (
     <div>
-      <label className="block text-sm font-medium">Année d'inscription</label>
+      <label className="block text-sm font-medium">
+        Année d&apos;inscription
+      </label>
       <input
         type="number"
         {...register("anneeInscription")}
