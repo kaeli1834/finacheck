@@ -15,67 +15,83 @@ export function validateParcoursField(field: ParcoursAcademiqueField): Validatio
   requiredCount += 2; // typeAnnee + année (déjà remplie automatiquement)
   if (field.typeAnnee) filledCount++;
 
-  if (field.typeAnnee === "academique") {
-    // Champs requis pour année académique
-    const academicRequiredFields = [
-      { key: "cursusType", label: "Type de cursus" },
-      { key: "etablissement", label: "Établissement" },
-      { key: "creditsAcquis", label: "Crédits acquis" },
-      { key: "creditsEchecs", label: "Crédits inscrits" },
-    ];
-
-    requiredCount += academicRequiredFields.length;
-
-    academicRequiredFields.forEach(({ key, label }) => {
-      const value = field[key as keyof ParcoursAcademiqueField];
-      if (!value || value === "") {
-        missingFields.push(label);
-      } else {
-        filledCount++;
-      }
-    });
-
-    // Si continuation, vérifier le type de continuation
-    if (field.cursusType === "sameInscription") {
-      requiredCount++;
-      if (!field.continuationType) {
-        missingFields.push("Type de continuation");
-      } else {
-        filledCount++;
-      }
-    }
-  } else if (field.typeAnnee === "autre") {
-    // Champs requis pour autre type d'année
+  if (field.typeAnnee === "autre") {
+    // Validation pour type "Autre" selon le schéma
     requiredCount++;
     if (!field.autreType) {
       missingFields.push("Type d'activité");
     } else {
       filledCount++;
+
+      // Check si choisi entre 3 options proposées
+      const validAutreTypes = ["academique_hors_fwb", "promotion_sociale", "autre_activite"];
+      if (!validAutreTypes.includes(field.autreType)) {
+        missingFields.push("Type d'activité valide");
+      }
     }
 
+    // Si Année aca hors FWB : check si Concours, si Oui, Check si Réussi ou non
     if (field.autreType === "academique_hors_fwb") {
-      const hfwbRequiredFields = [
-       {key: "concoursOption", label: "Concours"},
-      ];
+      requiredCount++;
+      if (!field.concoursType) {
+        missingFields.push("Information sur le concours");
+      } else {
+        filledCount++;
 
-      requiredCount += hfwbRequiredFields.length;
+        if (field.concoursType === "oui") {
+          requiredCount++;
+          if (!field.concoursOption) {
+            missingFields.push("Résultat du concours");
+          } else {
+            filledCount++;
+          }
+        }
+      }
+    }
+    // Pour promotion_sociale et autre_activite, pas de vérifications supplémentaires
 
-      hfwbRequiredFields.forEach(({ key, label }) => {
-        const value = field[key as keyof ParcoursAcademiqueField];
-        if (!value || value === "") {
-          missingFields.push(label);
+  } else if (field.typeAnnee === "academique") {
+    // Validation pour type "Académique" selon le schéma
+
+    // Check si un des 4 types est sélectionné
+    const validCursusTypes = ["premInscription", "sameInscription", "reorientation", "diplome"];
+    requiredCount++;
+    if (!field.cursusType) {
+      missingFields.push("Type de cursus");
+    } else if (!validCursusTypes.includes(field.cursusType)) {
+      missingFields.push("Type de cursus valide");
+    } else {
+      filledCount++;
+
+      // Si Continuation : check si type de continuation
+      if (field.cursusType === "sameInscription") {
+        requiredCount++;
+        if (!field.continuationType) {
+          missingFields.push("Type de continuation");
         } else {
           filledCount++;
         }
-      });
-    } else if (field.autreType === "promotion_sociale" || field.autreType === "autre_activite") {
-      requiredCount++;
-      if (!field.description || field.description.trim() === "") {
-        missingFields.push("Description");
+      }
+    }
+
+    // Check si crédits acquis et inscrits ok
+    const creditFields = [
+      { key: "creditsAcquis", label: "Crédits acquis" },
+      { key: "creditsEchecs", label: "Crédits inscrits" },
+    ];
+
+    requiredCount += creditFields.length;
+
+    creditFields.forEach(({ key, label }) => {
+      const value = field[key as keyof ParcoursAcademiqueField];
+      if (value === "" || value === null || value === undefined) {
+        missingFields.push(label);
+      } else if (typeof value === "number" && (value < 0 || value > 180)) {
+        missingFields.push(`${label} (valeur valide entre 0 et 180)`);
       } else {
         filledCount++;
       }
-    }
+    });
   }
 
   const completionRate = requiredCount > 0 ? (filledCount / requiredCount) * 100 : 0;

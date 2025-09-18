@@ -31,14 +31,14 @@ export const typeAnneeOptions: TypeAnneeOption[] = [
   {
     value: "academique",
     label: "Année académique",
-    icon: "🎓",
-    description: "Haute École ou Université",
+    icon: "",
+    description: "Haute École ou Université en Fédération Wallonie-Bruxelles",
   },
   {
     value: "autre",
     label: "Autre",
-    icon: "🔄",
-    description: "Promotion sociale, travail, autre formation",
+    icon: "",
+    description: "Année académique hors FWB, promotion sociale, autre activité",
   },
 ];
 
@@ -46,25 +46,25 @@ export const cursusOptions: CursusOption[] = [
   {
     value: "premInscription",
     label: "Première inscription",
-    icon: "🆕",
+    icon: "",
     description: "Première inscription dans l'enseignement supérieur",
   },
   {
     value: "sameInscription",
     label: "Continuation",
-    icon: "➡️",
+    icon: "",
     description: "Poursuite d'un cursus déjà entamé",
   },
   {
     value: "reorientation",
     label: "Réorientation",
-    icon: "🔄",
+    icon: "",
     description: "Changement de cursus",
   },
   {
     value: "diplome",
     label: "Diplômé",
-    icon: "🎓",
+    icon: "",
     description: "Année de diplôme",
   },
 ];
@@ -73,12 +73,14 @@ export const continuationOptions: ContinuationOption[] = [
   {
     value: "bloc1",
     label: "Bloc 1",
+    icon: "",
     description: "Première année de bachelier",
   },
   {
     value: "bloc2-3",
     label: "Bloc 2/3 - Poursuite de cursus",
-    description: "Deuxième, troisième année ou master",
+    icon: "",
+    description: "Deuxième et/ou troisième année de bachelier",
   },
 ];
 
@@ -86,19 +88,19 @@ export const autreTypeOptions: AutreTypeOption[] = [
   {
     value: "academique_hors_fwb",
     label: "Année académique hors FWB",
-    icon: "🌍",
+    icon: "",
     description: "France, Flandre, autre région/pays",
   },
   {
     value: "promotion_sociale",
     label: "Promotion Sociale",
-    icon: "📚",
+    icon: "",
     description: "Formation en promotion sociale",
   },
   {
     value: "autre_activite",
     label: "Autre activité",
-    icon: "💼",
+    icon: "",
     description: "Travail, formation professionnelle, autre",
   },
 ];

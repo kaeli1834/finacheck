@@ -15,6 +15,8 @@ export type ParcoursAcademiqueField = {
   isDiplome: boolean;
   etablissement?: string;
   description?: string;
+  concoursType?: "oui" | "non";
+  concoursOption?: "réussi" | "raté";
 };
 
 export type StepAcaFormValues = {
@@ -52,6 +54,7 @@ export type ConcoursOption = {
 export type ContinuationOption = {
   value: "bloc1" | "bloc2-3";
   label: string;
+  icon: string;
   description: string;
 };
 

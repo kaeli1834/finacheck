@@ -59,7 +59,7 @@ export default function AnneeAcademique({
           className="h-4 w-4 text-violet-600 border-slate-300 rounded focus:ring-violet-500 dark:bg-slate-700 dark:border-slate-600 dark:focus:ring-violet-500"
         />
         <FieldGroup
-          label="J'ai bénéficié d'un allégement de ma charge de travail"
+          label="J'ai bénéficié d'un allégement de mon PAE"
           helpText="Cochez si vous avez bénéficié d'un allégement de votre PAE cette année"
           className="flex-1"
         >
