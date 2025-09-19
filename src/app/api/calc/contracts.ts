@@ -13,7 +13,7 @@ export const Step2 = z.object({
         cursus: z.enum(["firstInscription", "sameInscription", "reorientation"]),
         creditsAcquis: z.coerce.number().int().min(0).max(100),
         creditsInscrits: z.coerce.number().int().min(0).max(100),
-        allègement: z.boolean(),
+        allegement: z.boolean(),
     })),
 });
 
