@@ -7,7 +7,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint",
-    "test:validation": "tsx test-validation.js"
+    "test:validation": "node test-validation.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
