@@ -18,6 +18,7 @@ export type ParcoursAcademiqueField = {
   concoursType?: "oui" | "non";
   concoursOption?: "réussi" | "raté";
   isComplete?: boolean;
+  isDoubleInscription?: boolean;
 };
 
 export type ParcoursField = ParcoursAcademiqueField;

@@ -120,7 +120,7 @@ function AddButton({
             {hasPremiereInscription && (
               <p className="text-xs mt-1">
                 Vous avez déjà ajouté votre première inscription dans le
-                supérieur.
+                supérieur et/ou compléter votre parcours.
               </p>
             )}
           </div>
