@@ -32,7 +32,29 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const parsed = FinalInputSchema.safeParse(inputData);
+  // Transform frontend data to backend format
+  function transformParcoursToInscriptions(inputData: any) {
+    if (!inputData.parcoursAcademique) {
+      return inputData;
+    }
+
+    const transformedData = { ...inputData };
+    transformedData.inscriptions = inputData.parcoursAcademique.map((parcours: any) => ({
+      anneeInscription: parcours.annee ? parseInt(parcours.annee.split('-')[0]) : parcours.anneeInscription,
+      cursus: parcours.cursusType === "premInscription" ? "firstInscription" : parcours.cursusType,
+      creditsAcquis: parcours.creditsAcquis,
+      creditsInscrits: parcours.creditsEchecs || parcours.creditsInscrits,
+      allegement: parcours.allegement,
+    }));
+    
+    delete transformedData.parcoursAcademique;
+    return transformedData;
+  }
+
+  // Transform the input data before validation
+  const transformedData = transformParcoursToInscriptions(inputData);
+
+  const parsed = FinalInputSchema.safeParse(transformedData);
   if (!parsed.success) {
     return NextResponse.json(
       {
