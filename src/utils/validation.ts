@@ -16,7 +16,7 @@ export function validateParcoursField(field: ParcoursAcademiqueField): Validatio
   if (field.typeAnnee) filledCount++;
 
   if (field.typeAnnee === "autre") {
-    // Validation pour type "Autre" selon le schéma
+    // Validation pour type "Autre"
     requiredCount++;
     if (!field.autreType) {
       missingFields.push("Type d'activité");
@@ -55,7 +55,6 @@ export function validateParcoursField(field: ParcoursAcademiqueField): Validatio
 
     // Check si un des 4 types est sélectionné
     const validCursusTypes = ["premInscription", "sameInscription", "reorientation", "diplome"];
-    requiredCount++;
     if (!field.cursusType) {
       missingFields.push("Type de cursus");
     } else if (!validCursusTypes.includes(field.cursusType)) {
@@ -96,7 +95,11 @@ export function validateParcoursField(field: ParcoursAcademiqueField): Validatio
 
   const completionRate = requiredCount > 0 ? (filledCount / requiredCount) * 100 : 0;
   const isValid = missingFields.length === 0;
+  const isComplete = isValid && completionRate === 100;
 
+  // Mettre à jour le champ isComplete dans l'objet field
+  field.isComplete = isComplete;
+  
   return {
     isValid,
     missingFields,

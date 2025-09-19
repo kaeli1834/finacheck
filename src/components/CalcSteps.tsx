@@ -58,25 +58,29 @@ export function StepNationalite() {
   );
 }
 
-// Composant pour une année individuelle (maintenant compact)
+// Composant pour une carte d'année académique
 function AnneeCard({
   field,
   index,
   isLast,
+  onRemove,
+  isExpanded,
+  onToggle,
 }: {
   field: ParcoursField;
   index: number;
   isLast: boolean;
+  onRemove: () => void;
+  isExpanded: boolean;
+  onToggle: () => void;
 }) {
-  const { handleRemove, isCardExpanded, toggleCard } = useParcours();
-
   return (
     <AnneeCompactCard
       field={field}
       index={index}
-      onRemove={() => handleRemove(index)}
-      isExpanded={isCardExpanded(index)}
-      onToggle={() => toggleCard(index)}
+      onRemove={onRemove}
+      isExpanded={isExpanded}
+      onToggle={onToggle}
       isLast={isLast}
     />
   );
@@ -120,7 +124,7 @@ function AddButton({
             {hasPremiereInscription && (
               <p className="text-xs mt-1">
                 Vous avez déjà ajouté votre première inscription dans le
-                supérieur.
+                supérieur et/ou compléter votre parcours.
               </p>
             )}
           </div>
@@ -147,8 +151,16 @@ export function StepAca() {
     formState: { errors },
   } = useFormContext();
 
-  const { fields, handleAdd, isEmpty, canAdd, hasPremiereInscription } =
-    useParcours();
+  const {
+    fields,
+    handleAdd,
+    handleRemove,
+    isEmpty,
+    canAdd,
+    hasPremiereInscription,
+    isCardExpanded,
+    toggleCard,
+  } = useParcours();
 
   console.log("StepAca render:", {
     fieldsLength: fields.length,
@@ -186,6 +198,9 @@ export function StepAca() {
                 field={field}
                 index={idx}
                 isLast={idx === fields.length - 1}
+                onRemove={() => handleRemove(idx)}
+                isExpanded={isCardExpanded(idx)}
+                onToggle={() => toggleCard(idx)}
               />
             ))}
             <AddButton

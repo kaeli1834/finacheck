@@ -65,6 +65,7 @@ function NextButton({
         parcoursData.length === 0 ||
         (() => {
           // Vérifier que le formulaire est complet
+          // TODO: rajouter isComplete dans validateParcoursField @Copilot
           return !parcoursData?.every((parcours) => parcours?.isComplete);
         })()
       );
