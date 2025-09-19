@@ -7,7 +7,6 @@ import AnneeAutre from "./AnneeAutre";
 import FieldGroup from "../form/FieldGroup";
 import RadioButtonGroup from "../form/RadioButtonGroup";
 import { typeAnneeOptions } from "@/data/formOptions";
-import { on } from "events";
 
 interface AnneeCompactCardProps {
   field: ParcoursAcademiqueField;
@@ -191,10 +190,7 @@ export default function AnneeCompactCard({
   return (
     <div
       className={`rounded-lg p-3 border cursor-pointer transition-all hover:shadow-md ${getCardStyle()}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        onToggle();
-      }}
+      onClick={onToggle}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -236,13 +232,7 @@ export default function AnneeCompactCard({
           </div>
         </div>
 
-        <div
-          className="flex items-center gap-2 ml-2"
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-        >
+        <div className="flex items-center gap-2 ml-2">
           {/* Barre de progression */}
           {!validation.isValid && (
             <div className="w-12 h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">

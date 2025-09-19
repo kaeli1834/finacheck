@@ -76,7 +76,9 @@ export function useParcours() {
   // Gestion de l'expansion des cartes
   const toggleCard = (index: number) => {
     console.log(`Toggle card ${index}, current expanded: ${expandedCardIndex}`);
-    setExpandedCardIndex(expandedCardIndex === index ? null : index);
+    const newExpandedIndex = expandedCardIndex === index ? null : index;
+    console.log(`Setting expanded index to: ${newExpandedIndex}`);
+    setExpandedCardIndex(newExpandedIndex);
   };
 
   const isCardExpanded = (index: number) => {
